@@ -61,17 +61,14 @@
     <script>
         async function fetchCryptoPrices() {
             try {
-                // 1. 브라우저 캐시를 무력화하기 위한 타임스탬프 생성
-                const timestamp = new Date().getTime();
-                
-                // 2. 프록시 없이 CoinGecko 오리지널 API 주소에 타임스탬프만 추가
-                const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&_t=${timestamp}`;
+                // _t 파라미터를 제거한 순수 원본 API 주소 사용
+                const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd';
 
-                // 3. fetch 요청 (캐시 사용 안 함 설정 추가)
+                // 브라우저에게만 캐시를 쓰지 말라고 정중히 요청 (API 서버 자극 최소화)
                 const response = await fetch(apiUrl, { cache: 'no-store' });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP 에러: ${response.status}`);
+                    throw new Error(`${response.status}`); // 에러 번호만 정확히 던짐
                 }
                 
                 const data = await response.json();
@@ -87,15 +84,14 @@
                 
             } catch (error) {
                 console.error('API 요청 에러:', error);
-                document.getElementById('btc-price').innerText = '데이터 갱신 실패';
-                document.getElementById('eth-price').innerText = '데이터 갱신 실패';
+                // 화면에 "데이터 갱신 실패: 429" 형식으로 원인을 명확히 출력
+                document.getElementById('btc-price').innerText = `갱신 실패 (에러: ${error.message})`;
+                document.getElementById('eth-price').innerText = `갱신 실패 (에러: ${error.message})`;
             }
         }
 
         // 최초 1회 실행
         fetchCryptoPrices();
-        
-        // 60초마다 반복 업데이트 
         setInterval(fetchCryptoPrices, 60000);
     </script>
 </body>
